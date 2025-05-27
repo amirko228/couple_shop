@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/data/products";
 import ProductCard from "@/components/products/ProductCard";
 import { Search } from "lucide-react";
 import { Product } from "@/types";
 
-export default function SearchPage() {
+// Компонент для поиска с использованием useSearchParams
+function SearchContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || "";
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -39,7 +40,7 @@ export default function SearchPage() {
         <h1 className="text-3xl font-bold mb-4">Результаты поиска</h1>
         <div className="flex items-center mb-2">
           <p className="text-gray-600">
-            По запросу <span className="font-medium">"{searchQuery}"</span> {filteredProducts.length > 0 
+            По запросу <span className="font-medium">{searchQuery}</span> {filteredProducts.length > 0 
               ? `найдено ${filteredProducts.length} ${
                   filteredProducts.length === 1 
                     ? 'товар' 
@@ -119,5 +120,18 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Компонент-оболочка с Suspense
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-12 text-center">
+        <p className="text-gray-600">Загрузка...</p>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 } 

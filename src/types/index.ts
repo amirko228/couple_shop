@@ -11,6 +11,7 @@ export interface Product {
   images: string[];
   inStock: boolean;
   featured?: boolean;
+  createdAt?: string;
 }
 
 export interface ProductReview {
