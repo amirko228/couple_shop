@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 👕 Couple_Shop - Интернет-магазин одежды с принтами
 
-## Getting Started
+Современный интернет-магазин одежды с возможностью загрузки пользовательских принтов.
 
-First, run the development server:
+![Couple_Shop](https://placeholder.pics/svg/1200x630/DEDEDE/555555/couple_shop)
+
+## 📋 Содержание
+
+- [О проекте](#о-проекте)
+- [Функциональность](#функциональность)
+- [Технологии](#технологии)
+- [Установка и запуск](#установка-и-запуск)
+- [Структура проекта](#структура-проекта)
+- [Лицензия](#лицензия)
+
+## 🔍 О проекте
+
+Couple_Shop - это веб-приложение для интернет-магазина одежды, специализирующегося на футболках и худи с уникальными принтами. Пользователи могут выбирать товары из каталога или загружать свои изображения для создания индивидуального дизайна.
+
+## ✨ Функциональность
+
+- **Каталог товаров**: просмотр доступных футболок и худи с фильтрацией
+- **Карточки товаров**: детальная информация о товаре с выбором размера и цвета
+- **Корзина покупок**: добавление товаров, изменение количества, удаление
+- **Загрузка пользовательских изображений**: drag & drop, валидация типа и размера
+- **Адаптивный дизайн**: оптимизация для мобильных устройств, планшетов и десктопов
+- **Админ-панель**: управление товарами и просмотр загруженных пользователями изображений
+
+## 🛠 Технологии
+
+- **Frontend**: React, Next.js, TypeScript
+- **Стили**: TailwindCSS
+- **Состояние**: React Context API
+- **Изображения**: Next.js Image Optimization
+- **Иконки**: Lucide React
+
+## 🚀 Установка и запуск
+
+### Предварительные требования
+
+- Node.js 18.0 или выше
+- npm или yarn
+
+### Установка
+
+1. Клонировать репозиторий:
+   ```bash
+   git clone https://github.com/yourusername/couple_shop.git
+   cd couple_shop
+   ```
+
+2. Установить зависимости:
+   ```bash
+   npm install
+   # или
+   yarn install
+   ```
+
+3. Запустить проект в режиме разработки:
+   ```bash
+   npm run dev
+   # или
+   yarn dev
+   ```
+
+4. Открыть [http://localhost:3000](http://localhost:3000) в браузере
+
+### Сборка для продакшена
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm run start
+# или
+yarn build
+yarn start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📂 Структура проекта
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+couple_shop/
+├── public/            # Статические файлы
+│   └── images/        # Изображения
+├── src/               # Исходный код
+│   ├── app/           # Страницы приложения (Next.js App Router)
+│   ├── components/    # React компоненты
+│   ├── context/       # React контексты (корзина)
+│   ├── data/          # Моковые данные
+│   └── types/         # TypeScript типы
+├── next.config.js     # Конфигурация Next.js
+└── tailwind.config.js # Конфигурация TailwindCSS
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📜 Лицензия
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
