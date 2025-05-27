@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4 flex items-center">
               <span className="text-pink-500">Couple</span>
-              <span className="text-white">_Shop</span>
+              <span className="text-white">_Shoop</span>
             </h3>
             <p className="text-gray-400 mb-4">
               Магазин стильной одежды с уникальными принтами. Создай свой дизайн или выбери из наших коллекций.
@@ -63,14 +63,14 @@ const Footer = () => {
             <ul className="space-y-2 text-gray-400">
               <li>Адрес: г. Москва, ул. Примерная, 123</li>
               <li>Телефон: +7 (999) 123-45-67</li>
-              <li>Email: info@couple-shop.ru</li>
+              <li>Email: info@couple-shoop.ru</li>
               <li>Время работы: Пн-Вс 10:00 - 22:00</li>
             </ul>
           </div>
         </div>
         
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p className="mb-2">&copy; {new Date().getFullYear()} Couple_Shop. Все права защищены.</p>
+          <p className="mb-2">&copy; {new Date().getFullYear()} Couple_Shoop. Все права защищены.</p>
           <Link href="/login" className="text-gray-500 text-sm hover:text-pink-500 transition-colors">
             Вход для администраторов
           </Link>

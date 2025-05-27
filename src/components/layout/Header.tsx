@@ -62,7 +62,7 @@ const Header = () => {
         <div className="flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold flex items-center">
             <span className="bg-gradient-to-r from-pink-500 to-pink-400 bg-clip-text text-transparent">Couple</span>
-            <span className="text-white">_Shop</span>
+            <span className="text-white">_Shoop</span>
           </Link>
 
           {/* Desktop Navigation */}

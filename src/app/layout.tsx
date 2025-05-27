@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/context/CartContext";
 
 export const metadata: Metadata = {
-  title: "Couple_Shop - Одежда с уникальными принтами",
+  title: "Couple_Shoop - Одежда с уникальными принтами",
   description: "Интернет-магазин стильной одежды с возможностью создания индивидуальных принтов",
 };
 
