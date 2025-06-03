@@ -4,9 +4,14 @@ import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { useState } from "react";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const [contactInfo, setContactInfo] = useState({ name: "", contact: "", phone: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ru-RU", {
@@ -17,10 +22,77 @@ export default function CartPage() {
     }).format(price);
   };
 
-  const handleCheckout = () => {
-    alert("Функция оформления заказа пока в разработке. Спасибо за понимание!");
-    // В реальном приложении здесь был бы переход к оформлению заказа
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setContactInfo(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Валидация формы
+    if (!contactInfo.name || !contactInfo.contact || !contactInfo.phone) {
+      setError("Пожалуйста, заполните все обязательные поля");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      // Отправка данных на сервер
+      const response = await fetch('/api/telegram/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items,
+          totalPrice,
+          customerInfo: contactInfo,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Произошла ошибка при оформлении заказа');
+      }
+      
+      // Очистка корзины и показ сообщения об успехе
+      clearCart();
+      setOrderSuccess(true);
+    } catch (error) {
+      console.error("Ошибка при оформлении заказа:", error);
+      setError(error instanceof Error ? error.message : "Произошла ошибка. Пожалуйста, попробуйте еще раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (orderSuccess) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Заказ успешно оформлен!</h1>
+          <p className="text-gray-600 mb-6">
+            Спасибо за ваш заказ. Мы свяжемся с вами в ближайшее время для подтверждения деталей заказа.
+          </p>
+          <Link
+            href="/catalog"
+            className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-medium transition duration-300 inline-flex items-center"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" /> Вернуться к покупкам
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -143,12 +215,71 @@ export default function CartPage() {
               </div>
             </div>
             
-            <button
-              onClick={handleCheckout}
-              className="w-full mt-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-full transition duration-300"
-            >
-              Оформить заказ
-            </button>
+            <form onSubmit={handleCheckout} className="mt-6 space-y-4">
+              <h3 className="font-medium">Контактная информация</h3>
+              
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+                  {error}
+                </div>
+              )}
+              
+              <div>
+                <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-1">
+                  Имя <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={contactInfo.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="contact" className="block text-gray-700 text-sm font-medium mb-1">
+                  Telegram/WhatsApp <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="contact"
+                  name="contact"
+                  value={contactInfo.contact}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="@username или номер"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="phone" className="block text-gray-700 text-sm font-medium mb-1">
+                  Телефон <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={contactInfo.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full py-3 bg-pink-500 text-white font-medium rounded-full transition duration-300 ${
+                  isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-pink-600"
+                }`}
+              >
+                {isSubmitting ? "Оформление..." : "Оформить заказ"}
+              </button>
+            </form>
           </div>
         </div>
       </div>

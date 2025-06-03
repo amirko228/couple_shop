@@ -1,6 +1,7 @@
 import { Product } from "@/types";
 
-export const products: Product[] = [
+// Initial products data
+const initialProducts: Product[] = [
   {
     id: "1",
     name: "Футболка Urban Style",
@@ -105,4 +106,29 @@ export const products: Product[] = [
     featured: false,
     createdAt: "2024-05-08T12:00:00Z",
   },
-]; 
+];
+
+// Функция для получения продуктов
+const getProducts = (): Product[] => {
+  if (typeof window !== 'undefined') {
+    const savedProducts = localStorage.getItem('products');
+    if (savedProducts) {
+      try {
+        return JSON.parse(savedProducts);
+      } catch (error) {
+        console.error('Error parsing saved products:', error);
+        localStorage.setItem('products', JSON.stringify(initialProducts));
+        return initialProducts;
+      }
+    } else {
+      localStorage.setItem('products', JSON.stringify(initialProducts));
+      return initialProducts;
+    }
+  }
+  return initialProducts;
+};
+
+// Получаем продукты
+const products = getProducts();
+
+export { products, initialProducts }; 

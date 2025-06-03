@@ -1,8 +1,50 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { products as initialProducts } from "@/data/products";
+import { Product } from "@/types";
+import ProductCard from "@/components/products/ProductCard";
 
 export default function Home() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  // Загрузка товаров из localStorage
+  useEffect(() => {
+    const loadProducts = () => {
+      try {
+        const savedProducts = localStorage.getItem("products");
+        if (savedProducts) {
+          const parsedProducts = JSON.parse(savedProducts);
+          // Фильтруем только популярные товары
+          const featured = parsedProducts.filter((product: Product) => product.featured).slice(0, 4);
+          setFeaturedProducts(featured);
+        } else {
+          // Если в localStorage ничего нет, используем начальные данные
+          const featured = initialProducts.filter(product => product.featured).slice(0, 4);
+          setFeaturedProducts(featured);
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке товаров:", error);
+        const featured = initialProducts.filter(product => product.featured).slice(0, 4);
+        setFeaturedProducts(featured);
+      }
+    };
+
+    // Загружаем товары сразу при монтировании
+    loadProducts();
+
+    // Добавляем слушатель событий для обновления при изменении localStorage
+    window.addEventListener("storage", loadProducts);
+
+    // Очистка слушателя при размонтировании
+    return () => {
+      window.removeEventListener("storage", loadProducts);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -45,7 +87,7 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-24 bg-gray-100">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-4">Почему <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-pink-600">Couple_Shop</span>?</h2>
+          <h2 className="text-4xl font-bold text-center mb-4">Почему <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-pink-600">Couple_Shoop</span>?</h2>
           <p className="text-gray-600 text-center max-w-2xl mx-auto mb-16 text-lg">Мы предлагаем лучшие решения для создания вашего уникального стиля</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -90,30 +132,24 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Product Cards will be rendered here */}
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                <div className="relative overflow-hidden rounded-t-xl aspect-[3/4] bg-gray-200">
-                  <div className="absolute inset-0 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Link href={`/product/${item}`} className="w-full flex justify-center">
-                      <button className="transform -translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-pink-500 hover:bg-pink-600 text-white py-3 px-6 rounded-full font-medium">
-                        Подробнее
-                      </button>
-                    </Link>
+            {featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              // Заглушки, если популярных товаров нет
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+                  <div className="relative overflow-hidden rounded-t-xl aspect-[3/4] bg-gray-200">
+                    <div className="absolute inset-0 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+                  </div>
+                  <div className="p-5 bg-white rounded-b-xl">
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                    <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
                   </div>
                 </div>
-                <div className="p-5 bg-white rounded-b-xl">
-                  <Link href={`/product/${item}`}>
-                    <h3 className="font-bold text-lg mb-2 group-hover:text-pink-500 transition-colors">Футболка "Urban Style"</h3>
-                  </Link>
-                  <p className="text-pink-500 font-bold text-xl">2 490 ₽</p>
-                </div>
-                <div className="absolute top-3 right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                  Хит продаж
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>

@@ -1,17 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { products } from "@/data/products";
+import { products as initialProducts } from "@/data/products";
 import ProductCard from "@/components/products/ProductCard";
 import { Filter } from "lucide-react";
 import { Product, ProductCategory } from "@/types";
 
 export default function CatalogPage() {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
   const [activeCategory, setActiveCategory] = useState<ProductCategory | "all">("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Загрузка товаров из localStorage при монтировании компонента
+  useEffect(() => {
+    const loadProducts = () => {
+      try {
+        const savedProducts = localStorage.getItem("products");
+        if (savedProducts) {
+          const parsedProducts = JSON.parse(savedProducts);
+          setProducts(parsedProducts);
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке товаров:", error);
+      }
+    };
+
+    // Загружаем товары сразу при монтировании
+    loadProducts();
+
+    // Добавляем слушатель событий для обновления при изменении localStorage
+    window.addEventListener("storage", loadProducts);
+
+    // Очистка слушателя при размонтировании
+    return () => {
+      window.removeEventListener("storage", loadProducts);
+    };
+  }, []);
+
+  // Обновление минимальной и максимальной цены при изменении списка товаров
   const minPrice = Math.min(...products.map(p => p.price));
   const maxPrice = Math.max(...products.map(p => p.price));
 
@@ -35,7 +63,7 @@ export default function CatalogPage() {
     );
     
     setFilteredProducts(result);
-  }, [activeCategory, priceRange]);
+  }, [activeCategory, priceRange, products]);
 
   const handleCategoryChange = (category: ProductCategory | "all") => {
     setActiveCategory(category);

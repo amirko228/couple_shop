@@ -4,9 +4,9 @@ import { useState, useEffect, ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { products } from "@/data/products";
-import { Pencil, Trash2, Plus, Search, Users, ShoppingBag, Image as ImageIcon, X, CheckCircle, Download, ExternalLink, Eye } from "lucide-react";
-import { Product } from "@/types";
+import { initialProducts } from "@/data/products";
+import { Pencil, Trash2, Plus, Search, Users, ShoppingBag, X, CheckCircle, Eye } from "lucide-react";
+import { Product, Order as OrderType } from "@/types";
 
 // Типы для модального окна
 interface ModalProps {
@@ -63,10 +63,11 @@ interface ExtendedProduct extends Product {
 }
 
 // Форма товара
-function ProductForm({ product, onSubmit, onCancel }: { 
+function ProductForm({ product, onSubmit, onCancel, isFullScreen = false }: { 
   product?: ExtendedProduct; 
   onSubmit: (product: ExtendedProduct) => void;
   onCancel: () => void;
+  isFullScreen?: boolean;
 }) {
   const [formData, setFormData] = useState<ExtendedProduct>(
     product || {
@@ -83,6 +84,72 @@ function ProductForm({ product, onSubmit, onCancel }: {
       createdAt: new Date().toISOString(),
     }
   );
+
+  const [imageURL, setImageURL] = useState("");
+  const [imagePreviews, setImagePreviews] = useState<string[]>(
+    formData.images && formData.images.length > 0 ? [...formData.images] : []
+  );
+
+  // Функция для добавления изображения по URL
+  const handleAddImage = () => {
+    if (imageURL.trim() && !formData.images.includes(imageURL)) {
+      const newImages = [...formData.images, imageURL];
+      setFormData({ ...formData, images: newImages });
+      setImagePreviews([...imagePreviews, imageURL]);
+      setImageURL("");
+    }
+  };
+
+  // Функция для удаления изображения
+  const handleRemoveImage = (index: number) => {
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
+    
+    const newPreviews = [...imagePreviews];
+    newPreviews.splice(index, 1);
+    
+    setFormData({ ...formData, images: newImages });
+    setImagePreviews(newPreviews);
+  };
+
+  // Функция для загрузки изображения из файла
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      
+      // Создаем URL для предпросмотра изображения
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Создаем уникальное имя файла
+      const timestamp = new Date().getTime();
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '-');
+      const fileName = `/images/uploads/${timestamp}-${safeFileName}`;
+      
+      // В реальном приложении здесь был бы код для загрузки файла на сервер
+      // Для демо-версии используем localStorage для хранения Data URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // В localStorage сохраняем путь к файлу
+        const newImages = [...formData.images, fileName];
+        setFormData({ ...formData, images: newImages });
+        
+        // Для предпросмотра используем URL.createObjectURL
+        setImagePreviews([...imagePreviews, previewUrl]);
+        
+        // В реальном приложении сохраняем файл на сервере через FormData + fetch
+        try {
+          // Имитация сохранения в localStorage
+          const imagesMap = JSON.parse(localStorage.getItem('uploadedImages') || '{}');
+          imagesMap[fileName] = reader.result;
+          localStorage.setItem('uploadedImages', JSON.stringify(imagesMap));
+          console.log(`Изображение сохранено: ${fileName}`);
+        } catch (error) {
+          console.error('Ошибка при сохранении изображения:', error);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -111,6 +178,227 @@ function ProductForm({ product, onSubmit, onCancel }: {
     onSubmit(formData as ExtendedProduct);
   };
 
+  // Если режим на весь экран, применяем другую верстку
+  if (isFullScreen) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 overflow-auto">
+        <div className="bg-gray-100 p-4 shadow-md">
+          <div className="container mx-auto flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {product ? "Редактирование товара" : "Добавление товара"}
+            </h2>
+            <button 
+              onClick={onCancel}
+              className="p-2 rounded-full hover:bg-gray-200"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div className="container mx-auto py-6 px-4 max-w-6xl">
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Левая колонка - информация о товаре */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Название</label>
+                  <input 
+                    type="text" 
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                    placeholder="Введите название товара"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                  <textarea 
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    required
+                    rows={6}
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                    placeholder="Введите подробное описание товара"
+                  ></textarea>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Цена (руб.)</label>
+                    <input 
+                      type="number" 
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      min="0"
+                      required
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+                    <select 
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                    >
+                      <option value="tshirt">Футболка</option>
+                      <option value="hoodie">Худи</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Размеры (через запятую)</label>
+                  <input 
+                    type="text" 
+                    value={formData.sizes?.join(", ")}
+                    onChange={handleSizesChange}
+                    placeholder="S, M, L, XL"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Цвета (через запятую)</label>
+                  <input 
+                    type="text" 
+                    value={formData.colors?.join(", ")}
+                    onChange={handleColorsChange}
+                    placeholder="Белый, Черный, Серый"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-base p-3 border"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <input 
+                      type="checkbox" 
+                      id="inStock"
+                      name="inStock"
+                      checked={formData.inStock}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="inStock" className="text-base font-medium text-gray-700">В наличии</label>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <input 
+                      type="checkbox" 
+                      id="featured"
+                      name="featured"
+                      checked={formData.featured}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="featured" className="text-base font-medium text-gray-700">Популярный товар</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Правая колонка - изображения */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Изображения товара</label>
+                  
+                  {/* Превью загруженных изображений */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {imagePreviews.map((src, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square relative rounded-lg border overflow-hidden shadow-sm">
+                          <Image
+                            src={src}
+                            alt={`Изображение ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Загрузка изображения по URL */}
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Добавить по URL</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={imageURL}
+                        onChange={(e) => setImageURL(e.target.value)}
+                        placeholder="Вставьте URL изображения"
+                        className="flex-grow p-3 border rounded-md text-base"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddImage}
+                        className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md font-medium"
+                      >
+                        Добавить
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Загрузка изображения из файла */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <label className="cursor-pointer block">
+                      <div className="mb-3">
+                        <div className="mx-auto w-16 h-16 mb-3 flex items-center justify-center bg-gray-100 rounded-full">
+                          <Plus className="w-8 h-8 text-gray-500" />
+                        </div>
+                        <span className="font-medium text-gray-700">Загрузить изображение</span>
+                      </div>
+                      <span className="text-sm text-gray-500">Перетащите файл или нажмите для выбора</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-400 mt-2">Поддерживаются форматы JPG, PNG и GIF</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 mt-10 pt-6 border-t border-gray-200">
+              <button 
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
+              >
+                Отмена
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-3 bg-pink-500 text-white rounded-md hover:bg-pink-600 font-medium"
+              >
+                {product ? "Сохранить изменения" : "Добавить товар"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Стандартная форма для использования в модальных окнах
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -161,6 +449,67 @@ function ProductForm({ product, onSubmit, onCancel }: {
           <option value="tshirt">Футболка</option>
           <option value="hoodie">Худи</option>
         </select>
+      </div>
+      
+      {/* Секция загрузки изображений */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Изображения</label>
+        
+        {/* Превью загруженных изображений */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+          {imagePreviews.map((src, index) => (
+            <div key={index} className="relative group">
+              <div className="aspect-square relative rounded border overflow-hidden">
+                <Image
+                  src={src}
+                  alt={`Изображение ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveImage(index)}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        
+        {/* Загрузка изображения по URL */}
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={imageURL}
+            onChange={(e) => setImageURL(e.target.value)}
+            placeholder="Вставьте URL изображения"
+            className="flex-grow p-2 border rounded"
+          />
+          <button
+            type="button"
+            onClick={handleAddImage}
+            className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
+          >
+            Добавить
+          </button>
+        </div>
+        
+        {/* Загрузка изображения из файла */}
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+          <label className="cursor-pointer block">
+            <span className="text-sm text-gray-500">Загрузить изображение с компьютера</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </label>
+          <p className="text-xs text-gray-400 mt-1">Поддерживаются форматы JPG, PNG и GIF</p>
+        </div>
       </div>
 
       <div>
@@ -235,7 +584,7 @@ interface ModalInfo {
   productId: string;
 }
 
-// Демо данные для заказов
+// Тип для заказов
 interface Order {
   id: string;
   customerName: string;
@@ -310,14 +659,15 @@ const mockOrders: Order[] = [
 ];
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"products" | "uploads" | "orders">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   
-  // Локальное хранение продуктов для демонстрации функциональности
+  // Состояния для хранения данных
   const [localProducts, setLocalProducts] = useState<ExtendedProduct[]>([]);
+  const [localOrders, setLocalOrders] = useState<Order[]>([]);
   
   // Состояния для модальных окон
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -328,10 +678,64 @@ export default function AdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalInfo, setModalInfo] = useState<ModalInfo>({ title: "", message: "", productId: "" });
   
-  // Инициализация локальных продуктов
+  // Инициализация данных из localStorage или из демо-данных
   useEffect(() => {
-    setLocalProducts(products as ExtendedProduct[]);
+    // Проверяем наличие директории для загрузок
+    try {
+      // В реальном приложении здесь был бы код для проверки и создания директории
+      // на сервере, но для демо-версии просто проверим наличие папки в public
+      const uploadsDir = '/images/uploads/';
+      console.log(`Проверка директории: ${uploadsDir}`);
+      
+      // Для демо-версии предположим, что директория существует
+      // В реальном приложении здесь был бы код для создания директории
+      // если она не существует
+    } catch (error) {
+      console.error("Ошибка при проверке директории uploads:", error);
+    }
+    
+    // Загрузка продуктов
+    const savedProducts = localStorage.getItem("products");
+    if (savedProducts) {
+      try {
+        setLocalProducts(JSON.parse(savedProducts));
+      } catch (error) {
+        console.error("Ошибка при загрузке продуктов:", error);
+        setLocalProducts(initialProducts as ExtendedProduct[]);
+      }
+    } else {
+      setLocalProducts(initialProducts as ExtendedProduct[]);
+    }
+    
+    // Загрузка заказов
+    const savedOrders = localStorage.getItem("orders");
+    if (savedOrders) {
+      try {
+        setLocalOrders(JSON.parse(savedOrders));
+      } catch (error) {
+        console.error("Ошибка при загрузке заказов:", error);
+        setLocalOrders(mockOrders);
+      }
+    } else {
+      setLocalOrders(mockOrders);
+    }
   }, []);
+  
+  // Сохранение данных в localStorage при изменении
+  useEffect(() => {
+    if (localProducts.length > 0) {
+      localStorage.setItem("products", JSON.stringify(localProducts));
+      
+      // Вызываем событие storage для обновления других компонентов
+      window.dispatchEvent(new Event('storage'));
+    }
+  }, [localProducts]);
+  
+  useEffect(() => {
+    if (localOrders.length > 0) {
+      localStorage.setItem("orders", JSON.stringify(localOrders));
+    }
+  }, [localOrders]);
   
   // Проверка авторизации при монтировании компонента
   useEffect(() => {
@@ -357,34 +761,6 @@ export default function AdminPage() {
       product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Демо данные для загруженных изображений
-  const mockUploads = [
-    {
-      id: "1",
-      imageUrl: "/images/product-placeholder.jpg",
-      name: "Иван Иванов",
-      email: "ivan@example.com",
-      date: "22.05.2024",
-      status: "pending",
-    },
-    {
-      id: "2",
-      imageUrl: "/images/product-placeholder.jpg",
-      name: "Мария Петрова",
-      email: "maria@example.com",
-      date: "21.05.2024",
-      status: "processing",
-    },
-    {
-      id: "3",
-      imageUrl: "/images/product-placeholder.jpg",
-      name: "Алексей Сидоров",
-      email: "alex@example.com",
-      date: "20.05.2024",
-      status: "completed",
-    },
-  ];
-
   // Выход из админ-панели
   const handleLogout = () => {
     try {
@@ -446,17 +822,19 @@ export default function AdminPage() {
   
   // Функции для заказов
   const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    // В реальном приложении здесь был бы API запрос
-    showInfoModal("Статус обновлен", `Статус заказа ${orderId} изменен на "${newStatus}"`);
-  };
-  
-  // Функция для загрузок
-  const handleUploadAction = (action: string, uploadId: string) => {
-    if (action === "скачивания") {
-      showInfoModal("Скачивание", `Скачивание изображения начато. ID: ${uploadId}`);
-    } else {
-      showInfoModal("Уведомление", `Отправлено сообщение клиенту. ID: ${uploadId}`);
+    // Обновляем статус заказа в локальном состоянии
+    setLocalOrders(prev => 
+      prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+    
+    // Если открыт модальный диалог с деталями заказа, обновляем выбранный заказ
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
     }
+    
+    showInfoModal("Статус обновлен", `Статус заказа ${orderId} изменен на "${newStatus}"`);
   };
 
   // Форматирование цены
@@ -498,7 +876,7 @@ export default function AdminPage() {
       
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-md">
-        <div className="flex border-b">
+        <div className="flex border-b flex-wrap">
           <button
             className={`px-4 py-3 font-medium ${
               activeTab === "products"
@@ -509,17 +887,6 @@ export default function AdminPage() {
           >
             <ShoppingBag className="inline-block w-4 h-4 mr-2" />
             Товары
-          </button>
-          <button
-            className={`px-4 py-3 font-medium ${
-              activeTab === "uploads"
-                ? "border-b-2 border-pink-500 text-pink-500"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("uploads")}
-          >
-            <ImageIcon className="inline-block w-4 h-4 mr-2" />
-            Загруженные изображения
           </button>
           <button
             className={`px-4 py-3 font-medium ${
@@ -634,70 +1001,6 @@ export default function AdminPage() {
             </div>
           )}
           
-          {/* Uploads Tab */}
-          {activeTab === "uploads" && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Загруженные пользователями изображения</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockUploads.map((upload) => (
-                  <div key={upload.id} className="bg-white rounded-lg shadow border overflow-hidden">
-                    <div className="relative aspect-square">
-                      <Image
-                        src={upload.imageUrl}
-                        alt={`Загрузка от ${upload.name}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <div className="font-medium">{upload.name}</div>
-                      <div className="text-gray-500 text-sm">{upload.email}</div>
-                      <div className="text-gray-500 text-sm mt-1">Загружено: {upload.date}</div>
-                      <div className="mt-2">
-                        <span
-                          className={`py-1 px-2 rounded-full text-xs ${
-                            upload.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : upload.status === "processing"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {upload.status === "pending"
-                            ? "Ожидает обработки"
-                            : upload.status === "processing"
-                            ? "В обработке"
-                            : "Завершено"}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex">
-                        <button
-                          onClick={() => handleUploadAction("скачивания", upload.id)}
-                          className="bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded text-sm mr-2 flex items-center"
-                        >
-                          <Download className="w-3 h-3 mr-1" /> Скачать
-                        </button>
-                        <button
-                          onClick={() => handleUploadAction("связи с клиентом", upload.id)}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm flex items-center"
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" /> Связаться
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {mockUploads.length === 0 && (
-                <div className="text-center py-6">
-                  <p>Загруженные изображения не найдены</p>
-                </div>
-              )}
-            </div>
-          )}
-          
           {/* Orders Tab */}
           {activeTab === "orders" && (
             <div>
@@ -716,7 +1019,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="text-gray-600 text-sm">
-                    {mockOrders.map((order) => (
+                    {localOrders.map((order) => (
                       <tr key={order.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="py-3 px-6">
                           <div className="font-medium">{order.id}</div>
@@ -779,7 +1082,7 @@ export default function AdminPage() {
                 </table>
               </div>
               
-              {mockOrders.length === 0 && (
+              {localOrders.length === 0 && (
                 <div className="text-center py-6">
                   <p>Заказы не найдены</p>
                 </div>
@@ -803,21 +1106,15 @@ export default function AdminPage() {
         />
       </Modal>
       
-      <Modal 
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Редактирование товара"
-        onConfirm={() => {}}
-        confirmText="Сохранить"
-      >
-        {productToEdit && (
-          <ProductForm
-            product={productToEdit}
-            onSubmit={handleEditProduct}
-            onCancel={() => setIsEditModalOpen(false)}
-          />
-        )}
-      </Modal>
+      {/* Заменяем модальное окно на полноэкранную форму при редактировании */}
+      {isEditModalOpen && productToEdit && (
+        <ProductForm
+          product={productToEdit}
+          onSubmit={handleEditProduct}
+          onCancel={() => setIsEditModalOpen(false)}
+          isFullScreen={true}
+        />
+      )}
       
       <Modal 
         isOpen={isDeleteModalOpen}
@@ -857,7 +1154,7 @@ export default function AdminPage() {
             <div>
               <h4 className="font-medium text-gray-700">Товары:</h4>
               <ul className="space-y-2 mt-2">
-                {selectedOrder.items.map((item, index) => (
+                {selectedOrder.items.map((item: { productName: string; quantity: number; price: number }, index: number) => (
                   <li key={index} className="flex justify-between">
                     <span>{item.productName} x{item.quantity}</span>
                     <span>{formatPrice(item.price * item.quantity)}</span>

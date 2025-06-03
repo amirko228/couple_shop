@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -12,6 +12,34 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (product.images && product.images.length > 0) {
+      const imagePath = product.images[0];
+      if (imagePath.startsWith("data:") || imagePath.startsWith("blob:") || imagePath.startsWith("http")) {
+        // Если это Data URL, Blob URL или внешняя ссылка - используем как есть
+        setImageUrl(imagePath);
+      } else if (imagePath.startsWith("/images/uploads/")) {
+        // Если это загруженное изображение - ищем в localStorage
+        try {
+          const imagesMap = JSON.parse(localStorage.getItem('uploadedImages') || '{}');
+          if (imagesMap[imagePath]) {
+            setImageUrl(imagesMap[imagePath]);
+          } else {
+            // Если не найдено - используем путь как есть
+            setImageUrl(imagePath);
+          }
+        } catch (error) {
+          console.error('Ошибка при получении изображения из localStorage:', error);
+          setImageUrl(imagePath);
+        }
+      } else {
+        // Иначе используем путь как есть
+        setImageUrl(imagePath);
+      }
+    }
+  }, [product.images]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ru-RU", {
@@ -34,7 +62,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <Link href={`/product/${product.id}`}>
           <div className="w-full h-full relative">
             <Image
-              src={product.images[0] || "/images/product-placeholder.jpg"}
+              src={imageUrl || "/images/product-placeholder.jpg"}
               alt={product.name}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"

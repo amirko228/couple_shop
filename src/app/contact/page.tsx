@@ -70,7 +70,7 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5 text-pink-500 mt-1 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-medium">Email</h3>
-                    <p className="text-gray-600">info@couple-shop.ru</p>
+                    <p className="text-gray-600">info@couple-shoop.ru</p>
                   </div>
                 </li>
                 <li className="flex items-start">
