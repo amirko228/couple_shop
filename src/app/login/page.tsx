@@ -30,11 +30,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // В реальном приложении здесь был бы запрос к API
-      // Для демо используем фиксированные учетные данные
       setTimeout(() => {
-        if (username === "admin" && password === "admin123") {
-          // В реальном приложении использовали бы JWT или другие методы аутентификации
+        // Получаем сохраненный пароль из localStorage, если он есть
+        const savedPassword = localStorage.getItem("adminPassword") || "passd030201";
+        
+        if (username === "adminko" && password === savedPassword) {
           localStorage.setItem("isAdmin", "true");
           router.push("/admin");
         } else {
@@ -47,11 +47,6 @@ export default function LoginPage() {
       setError("Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.");
       setIsLoading(false);
     }
-  };
-
-  const handleFillDemo = () => {
-    setUsername("admin");
-    setPassword("admin123");
   };
 
   return (
@@ -121,22 +116,6 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
-
-        <div className="text-sm text-center">
-          <p className="font-medium text-gray-700">
-            Для демо используйте:
-          </p>
-          <p className="mt-1 text-gray-500">
-            Пользователь: admin<br />
-            Пароль: admin123
-          </p>
-          <button 
-            onClick={handleFillDemo}
-            className="mt-2 text-pink-600 hover:text-pink-500 font-medium"
-          >
-            Заполнить демо данные
-          </button>
-        </div>
 
         <div className="text-sm text-center mt-4">
           <Link href="/" className="font-medium text-pink-600 hover:text-pink-500">

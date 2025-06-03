@@ -659,7 +659,7 @@ const mockOrders: Order[] = [
 ];
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "settings">("products");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -677,6 +677,11 @@ export default function AdminPage() {
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalInfo, setModalInfo] = useState<ModalInfo>({ title: "", message: "", productId: "" });
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   
   // Инициализация данных из localStorage или из демо-данных
   useEffect(() => {
@@ -847,6 +852,67 @@ export default function AdminPage() {
     }).format(price);
   };
 
+  const openPasswordModal = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setIsPasswordModalOpen(true);
+  };
+
+  const handlePasswordChange = () => {
+    // Получаем сохраненный пароль из localStorage, если он есть
+    const savedPassword = localStorage.getItem("adminPassword") || "passd030201";
+    
+    // Проверка текущего пароля
+    if (currentPassword !== savedPassword) {
+      setPasswordError("Неверный текущий пароль");
+      return;
+    }
+
+    // Проверка нового пароля
+    if (newPassword.length < 6) {
+      setPasswordError("Новый пароль должен содержать минимум 6 символов");
+      return;
+    }
+
+    // Проверка подтверждения пароля
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Пароли не совпадают");
+      return;
+    }
+
+    // Сохраняем новый пароль в localStorage
+    try {
+      localStorage.setItem("adminPassword", newPassword);
+      showInfoModal("Пароль изменен", "Ваш пароль был успешно изменен");
+      setIsPasswordModalOpen(false);
+    } catch (error) {
+      console.error("Ошибка при сохранении пароля:", error);
+      setPasswordError("Ошибка при сохранении пароля. Попробуйте еще раз.");
+    }
+  };
+
+  // Компонент Настройки
+  const SettingsTab = () => (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-xl font-bold mb-6">Настройки профиля</h2>
+      
+      <div className="max-w-md space-y-6">
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold mb-2">Данные для входа</h3>
+          <p className="text-gray-600 mb-4">Логин: adminko</p>
+          <button 
+            onClick={openPasswordModal}
+            className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600"
+          >
+            Изменить пароль
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
@@ -898,6 +964,20 @@ export default function AdminPage() {
           >
             <Users className="inline-block w-4 h-4 mr-2" />
             Заказы
+          </button>
+          <button
+            className={`px-4 py-3 font-medium ${
+              activeTab === "settings"
+                ? "border-b-2 border-pink-500 text-pink-500"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("settings")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="inline-block w-4 h-4 mr-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Настройки
           </button>
         </div>
         
@@ -1089,24 +1169,21 @@ export default function AdminPage() {
               )}
             </div>
           )}
+          
+          {/* Settings Tab */}
+          {activeTab === "settings" && <SettingsTab />}
         </div>
       </div>
       
       {/* Модальные окна */}
-      <Modal 
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Добавление товара"
-        onConfirm={() => {}}
-        confirmText="Добавить"
-      >
+      {isAddModalOpen && (
         <ProductForm
           onSubmit={handleAddProduct}
           onCancel={() => setIsAddModalOpen(false)}
+          isFullScreen={true}
         />
-      </Modal>
+      )}
       
-      {/* Заменяем модальное окно на полноэкранную форму при редактировании */}
       {isEditModalOpen && productToEdit && (
         <ProductForm
           product={productToEdit}
@@ -1185,6 +1262,58 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+      </Modal>
+      
+      <Modal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        title="Изменение пароля"
+        onConfirm={handlePasswordChange}
+        confirmText="Изменить пароль"
+      >
+        <div className="space-y-4">
+          {passwordError && (
+            <div className="text-red-500 text-sm mb-4">
+              {passwordError}
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Текущий пароль
+            </label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Новый пароль
+            </label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Подтвердите новый пароль
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+              required
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
