@@ -111,17 +111,6 @@ const Header = () => {
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-pink-500 rounded-full"></span>
               )}
             </Link>
-            <Link 
-              href="/contact" 
-              className={`hover:text-pink-500 transition-colors relative ${
-                isActive('/contact') ? 'text-pink-500' : 'text-white'
-              }`}
-            >
-              Контакты
-              {isActive('/contact') && (
-                <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-pink-500 rounded-full"></span>
-              )}
-            </Link>
           </nav>
 
           <div className="flex items-center space-x-6">
@@ -186,14 +175,6 @@ const Header = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Как это работает
-              <span className="text-gray-400 text-sm">→</span>
-            </Link>
-            <Link 
-              href="/contact" 
-              className="text-white hover:text-pink-500 transition-colors flex justify-between items-center"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Контакты
               <span className="text-gray-400 text-sm">→</span>
             </Link>
           </nav>

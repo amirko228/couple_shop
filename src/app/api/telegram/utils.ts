@@ -184,12 +184,12 @@ ${itemsText}
 }
 
 /**
- * Форматирует цену в рублях
+ * Форматирует цену в сомах
  */
 function formatPrice(price: number): string {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
-    currency: 'RUB',
+    currency: 'KGS',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
