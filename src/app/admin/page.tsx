@@ -862,7 +862,8 @@ export default function AdminPage() {
 
   const handlePasswordChange = () => {
     // Получаем сохраненный пароль из localStorage, если он есть
-    const savedPassword = localStorage.getItem("adminPassword") || "passd030201";
+    const defaultPassword = "passd030201";
+    const savedPassword = localStorage.getItem("adminPassword") || defaultPassword;
     
     // Проверка текущего пароля
     if (currentPassword !== savedPassword) {

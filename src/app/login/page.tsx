@@ -31,10 +31,12 @@ export default function LoginPage() {
 
     try {
       setTimeout(() => {
-        // Получаем сохраненный пароль из localStorage, если он есть
-        const savedPassword = localStorage.getItem("adminPassword") || "passd030201";
+        // Фиксированный пароль или получение пароля из localStorage, если он был изменен
+        const defaultPassword = "passd030201";
+        const savedPassword = localStorage.getItem("adminPassword");
         
-        if (username === "adminko" && password === savedPassword) {
+        // Проверяем введенные данные против обоих возможных паролей
+        if (username === "adminko" && (password === defaultPassword || password === savedPassword)) {
           localStorage.setItem("isAdmin", "true");
           router.push("/admin");
         } else {
