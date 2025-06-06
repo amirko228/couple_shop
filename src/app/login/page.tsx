@@ -31,14 +31,29 @@ export default function LoginPage() {
 
     try {
       setTimeout(() => {
-        // Фиксированный пароль или получение пароля из localStorage, если он был изменен
+        // Фиксированный пароль администратора
         const defaultPassword = "passd030201";
-        const savedPassword = localStorage.getItem("adminPassword");
         
-        // Проверяем введенные данные против обоих возможных паролей
-        if (username === "adminko" && (password === defaultPassword || password === savedPassword)) {
-          localStorage.setItem("isAdmin", "true");
-          router.push("/admin");
+        // Получаем глобальный пароль, если он был установлен
+        const globalPassword = localStorage.getItem("globalAdminPassword");
+        
+        // Проверяем введенные данные
+        if (username === "adminko") {
+          // Если есть глобальный пароль и он совпадает с введенным
+          if (globalPassword && password === globalPassword) {
+            localStorage.setItem("isAdmin", "true");
+            router.push("/admin");
+          } 
+          // Если введен дефолтный пароль и нет глобального пароля
+          else if (password === defaultPassword && !globalPassword) {
+            localStorage.setItem("isAdmin", "true");
+            router.push("/admin");
+          }
+          // Если пароль неверный
+          else {
+            setError("Неверное имя пользователя или пароль");
+            setIsLoading(false);
+          }
         } else {
           setError("Неверное имя пользователя или пароль");
           setIsLoading(false);

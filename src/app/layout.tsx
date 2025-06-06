@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/context/CartContext";
+import PasswordSync from "@/components/PasswordSync";
 
 export const metadata: Metadata = {
   title: "Couple_Shoop - Одежда с уникальными принтами",
@@ -30,6 +31,7 @@ export default function RootLayout({
       </head>
       <body>
         <CartProvider>
+          <PasswordSync />
           <Header />
           <main>{children}</main>
           <Footer />

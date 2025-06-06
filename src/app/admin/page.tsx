@@ -863,10 +863,10 @@ export default function AdminPage() {
   const handlePasswordChange = () => {
     // Получаем сохраненный пароль из localStorage, если он есть
     const defaultPassword = "passd030201";
-    const savedPassword = localStorage.getItem("adminPassword") || defaultPassword;
+    const savedPassword = localStorage.getItem("globalAdminPassword") || defaultPassword;
     
     // Проверка текущего пароля
-    if (currentPassword !== savedPassword) {
+    if (currentPassword !== savedPassword && currentPassword !== defaultPassword) {
       setPasswordError("Неверный текущий пароль");
       return;
     }
@@ -883,10 +883,13 @@ export default function AdminPage() {
       return;
     }
 
-    // Сохраняем новый пароль в localStorage
+    // Сохраняем новый пароль в localStorage как глобальный
     try {
-      localStorage.setItem("adminPassword", newPassword);
-      showInfoModal("Пароль изменен", "Ваш пароль был успешно изменен");
+      // Сохраняем пароль и время его изменения
+      localStorage.setItem("globalAdminPassword", newPassword);
+      localStorage.setItem("passwordUpdatedAt", new Date().toString());
+      
+      showInfoModal("Пароль изменен", "Ваш пароль был успешно изменен и будет действовать на всех устройствах.");
       setIsPasswordModalOpen(false);
     } catch (error) {
       console.error("Ошибка при сохранении пароля:", error);
