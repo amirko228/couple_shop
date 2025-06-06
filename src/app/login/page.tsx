@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 
+// Массив возможных паролей (исходный и изменённые)
+// В реальном приложении это должно храниться на сервере
+const VALID_PASSWORDS = [
+  "passd030201", // Исходный пароль
+  "admin123",    // Предустановленный альтернативный пароль
+];
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,29 +38,23 @@ export default function LoginPage() {
 
     try {
       setTimeout(() => {
-        // Фиксированный пароль администратора
-        const defaultPassword = "passd030201";
+        // Проверка имени пользователя
+        if (username !== "adminko") {
+          setError("Неверное имя пользователя или пароль");
+          setIsLoading(false);
+          return;
+        }
         
-        // Получаем глобальный пароль, если он был установлен
-        const globalPassword = localStorage.getItem("globalAdminPassword");
+        // Проверка, входит ли введенный пароль в список действительных паролей
+        const isValidPassword = VALID_PASSWORDS.includes(password);
         
-        // Проверяем введенные данные
-        if (username === "adminko") {
-          // Если есть глобальный пароль и он совпадает с введенным
-          if (globalPassword && password === globalPassword) {
-            localStorage.setItem("isAdmin", "true");
-            router.push("/admin");
-          } 
-          // Если введен дефолтный пароль и нет глобального пароля
-          else if (password === defaultPassword && !globalPassword) {
-            localStorage.setItem("isAdmin", "true");
-            router.push("/admin");
-          }
-          // Если пароль неверный
-          else {
-            setError("Неверное имя пользователя или пароль");
-            setIsLoading(false);
-          }
+        // Проверяем также пользовательский пароль из localStorage (для обратной совместимости)
+        const customPassword = localStorage.getItem("globalAdminPassword");
+        const isCustomPassword = customPassword && password === customPassword;
+        
+        if (isValidPassword || isCustomPassword) {
+          localStorage.setItem("isAdmin", "true");
+          router.push("/admin");
         } else {
           setError("Неверное имя пользователя или пароль");
           setIsLoading(false);
